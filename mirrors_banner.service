@@ -1,0 +1,18 @@
+[Unit]
+Description=mirrors_banner
+[Service]
+Type=simple
+WorkingDirectory=/etc/xdp_rules
+ExecStart=/usr/bin/python3 mirrors_banner_main.py
+Restart=on-failure
+User=root
+#CapabilityBoundingSet=~0
+#AmbientCapabilities=CAP_CHOWN CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_FOWNER CAP_FSETID CAP_IPC_LOCK CAP_IPC_OWNER CAP_KILL CAP_LEASE CAP_LINUX_IMMUTABLE CAP_MAC_ADMIN CAP_MAC_OVERRIDE CAP_MKNOD CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_NET_BROADCAST CAP_NET_RAW CAP_SETGID CAP_SETFCAP CAP_SETPCAP CAP_SETUID CAP_SYS_ADMIN CAP_SYS_BOOT CAP_SYS_CHROOT CAP_SYS_MODULE CAP_SYS_NICE CAP_SYS_PACCT CAP_SYS_PTRACE CAP_SYS_RAWIO CAP_SYS_RESOURCE CAP_SYS_TIME CAP_SYS_TTY_CONFIG CAP_SYSLOG CAP_WAKE_ALARM
+#NoNewPrivileges=false
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_BPF CAP_SYS_ADMIN
+AmbientCapabilities=CAP_NET_ADMIN CAP_BPF CAP_SYS_ADMIN
+NoNewPrivileges=false
+StandardOutput=file:/var/log/mirrors_banner.log
+StandardError=file:/var/log/mirrors_banner.err
+[Install]
+WantedBy=multi-user.target
