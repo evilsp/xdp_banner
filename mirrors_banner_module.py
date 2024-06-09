@@ -53,6 +53,10 @@ class BannedIpXdpMap(object):
         """
             Banned ips should be one ip per line
         """
+        # Clear maps
+        self.ipv4_map.clear()
+        self.ipv6_map.clear()
+
         # Load V4 ips
         if self.v4_banned_ip_list_location:
             self.banlist_v4.load_banlist()
@@ -207,6 +211,7 @@ class BanList:
 
     def load_banlist(self):
         """加载 banlist 文件到内存"""
+        self.banlist.clear()
         if os.path.exists(self.filepath):
             with open(self.filepath, 'r') as f:
                 for line in f:
@@ -276,16 +281,10 @@ def convert_u32_to_ip(ip_bytes):
 
 # Transfer bytes to ipv6
 def in6_addr_to_ipv6(addr):
-    # Create a dictionary to store the extracted information
-    info = {}
-    info['u6_addr8'] = [addr.u6_addr8[i] for i in range(16)]
-    info['u6_addr16'] = [addr.u6_addr16[i] for i in range(8)]
-    info['u6_addr32'] = [addr.u6_addr32[i] for i in range(4)]
-    print(info)
-#    packed_ip = bytearray(16)
+    packed_ip = bytearray(16)
     # Extract from __u6_addr8
-#    for i in range(16):
-#        packed_ip[i] = addr.__u6_addr8[i]
+    for i in range(16):
+        packed_ip[i] = addr[i]
     # Convert packed_ip back to IPv6 string
-#    ipv6_address = socket.inet_ntop(socket.AF_INET6, bytes(packed_ip))
-#    return ipv6_address
+    ipv6_address = socket.inet_ntop(socket.AF_INET6, bytes(packed_ip))
+    return ipv6_address

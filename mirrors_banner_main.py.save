@@ -123,9 +123,8 @@ def update_metrics(ipv4_map, ipv6_map):
         ipv4_banned_last_access_time.labels(ip=convert_u32_to_ip(ip)).set(convert_ktime_to_time(info.timestamp))
 
     for ip, info in ipv6_map.items():
-        ipv6_banned_access_times.labels(ip=in6_addr_to_ipv6(ip.in6_u.u6_addr8)).set(info.access_times)
-        ipv6_banned_last_access_time.labels(ip=in6_addr_to_ipv6(ip.in6_u.u6_addr8)).set(convert_ktime_to_time(info.timestamp))
-
+        ipv6_banned_access_times.labels(ip=in6_addr_to_ipv6(ip)).set(info.access_times)
+        ipv6_banned_last_access_time.labels(ip=in6_addr_to_ipv6(ip)).set(convert_ktime_to_time(info.timestamp))
 
 # FASTAPI_INIT
 app = FastAPI()
