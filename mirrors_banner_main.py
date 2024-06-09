@@ -47,8 +47,8 @@ logger.addHandler(error_handler)
 
 # XDP_VAR_INIT
 map_location = './map_creator.c'
-v4_banned_list_location = '/etc/nginx/banned_ipv4'
-v6_banned_list_location = '/etc/nginx/banned_ipv6'
+v4_banned_list_location = './banned_ipv4'
+v6_banned_list_location = './banned_ipv6'
 prog_location = './mirrors_banner.c'
 prog_func_name = 'mirrors_banner'
 
@@ -232,4 +232,4 @@ if __name__ == "__main__":
     for item in init_dict.items():
         xdp_prog.attach_xdp_prog(item[0], item[1])
         logging.info(f"XDP program attached to {item[0]} with attach type {item[1]}")
-    uvicorn.run(app=app, host="198.18.114.2", port=8080)
+    uvicorn.run(app=app, host="0.0.0.0", port=8080)
