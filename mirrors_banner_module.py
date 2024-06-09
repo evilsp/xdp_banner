@@ -83,7 +83,6 @@ class BannedIpXdpMap(object):
         try:
             network = ipaddress.ip_network(cidr, strict=False)
             hosts = network.hosts()
-            full_num = len(hosts)
             skip_list = []
             if network.version == 4:
                 for ip in hosts:
@@ -127,7 +126,6 @@ class BannedIpXdpMap(object):
         try:
             network = ipaddress.ip_network(cidr, strict=False)
             hosts = network.hosts()
-            full_num = len(hosts)
             skip_list = []
             if network.version == 4:
                 for ip in hosts:
