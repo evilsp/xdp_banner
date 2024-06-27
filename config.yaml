@@ -1,0 +1,12 @@
+file:
+  ipv4_cidrs_filepath:
+  ipv4_cidrs_persistence_filepath:
+  ipv6_cidrs_filepath:
+  ipv6_cidrs_persistence_filepath:
+prometheus:
+  enable: True
+  metrics:
+    listen:
+      host: 198.18.114.2
+      port: 8080
+

@@ -1,4 +1,6 @@
-from mirrors_banner_module import BannedIpXdpMap, BannedIpXdpProg, convert_u32_to_ip, in6_addr_to_ipv6
+from banner_map_module import BannedIpXdpMap
+from banner_prog_module import BannedIpXdpProg
+from associated_module import convert_u32_to_ip, in6_addr_to_ipv6
 from fastapi import FastAPI
 from fastapi.responses import PlainTextResponse
 import subprocess
@@ -46,14 +48,15 @@ logger.addHandler(info_handler)
 logger.addHandler(error_handler)
 
 # XDP_VAR_INIT
-map_location = './map_creator.c'
 v4_banned_list_location = '/etc/nginx/banned_ipv4'
+v4_banned_list_persistence = '/etc/nginx/banned_ipv4_persistence'
 v6_banned_list_location = '/etc/nginx/banned_ipv6'
+v6_banned_list_persistence = '/etc/nginx/banned_ipv6_persistence'
 prog_location = './mirrors_banner.c'
 prog_func_name = 'mirrors_banner'
 
 # XDP_INIT
-xdp_map = BannedIpXdpMap(map_location, v4_banned_list_location, v6_banned_list_location)
+xdp_map = BannedIpXdpMap(v4_banned_list_location, v6_banned_list_location, v4_banned_list_persistence, v6_banned_list_persistence)
 xdp_prog = BannedIpXdpProg(prog_location, prog_func_name)
 
 # DEV_INIT_LIST
@@ -184,21 +187,25 @@ def status():
 
 
 @app.get("/update")
-def update(cidr: str):
-    err = xdp_map.add_ip_to_ban_list_with_cidr(cidr=cidr)
-    if err:
-        logging.info(f"Successfully added {cidr} to banned list")
-        return {"message": f"Successfully added {cidr} to banned list"}
-    return {"message": f"Failed to add {cidr} to banned list"}
+def update(cidr: str, ban_type: int=0, ban_time: int=0):
+    err = xdp_map.add_ip_to_ban_list_with_cidr(cidr=cidr, is_cidr_permanently_banned=ban_type, ban_time=ban_time)
+    if err == 0:
+        return {"message":f"Successfully added {cidr} to banned list"}
+    if err == 1:
+        return {"message": f"{cidr} exists, skip"}
+    if err == -1:
+        return {"message": f"Failed to add {cidr} to banned list"}
 
 
 @app.get("/remove")
 def remove(cidr: str):
     err = xdp_map.remove_ip_from_ban_list_with_cidr(cidr=cidr)
-    if err:
-        logging.info(f"Successfully removed {cidr} from banned list")
-        return {"message": f"Successfully removed {cidr} from banned list"}
-    return {"message": f"Failed to remove {cidr} from banned list, {cidr} not exist in banned list"}
+    if err == 0:
+        return {"message":f"Successfully removed {cidr} from banned list"}
+    if err == 1:
+        return {"message": f"{cidr} not exists, skip"}
+    if err == -1:
+        return {"message": f"Failed to add {cidr} to banned list"}
 
 
 @app.get("/reload")
@@ -214,7 +221,7 @@ def reload():
 
 @app.get("/metrics", response_class=PlainTextResponse)
 async def metrics():
-    update_metrics(xdp_map.ipv4_map, xdp_map.ipv6_map)
+    update_metrics(xdp_map.ipv4_access_map, xdp_map.ipv6_access_map)
     return generate_latest(registry)
 
 
