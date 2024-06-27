@@ -187,7 +187,7 @@ def status():
 
 
 @app.get("/update")
-def update(cidr: str, ban_type: int=0, ban_time: int=0):
+def update(cidr: str, ban_type: int=1, ban_time: int=0):
     err = xdp_map.add_ip_to_ban_list_with_cidr(cidr=cidr, is_cidr_permanently_banned=ban_type, ban_time=ban_time)
     if err == 0:
         return {"message":f"Successfully added {cidr} to banned list"}

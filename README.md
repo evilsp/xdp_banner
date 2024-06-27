@@ -61,8 +61,12 @@
 1. 添加 IPV4/IPV6 地址到 Ban 列表中
 
    ```bash
-   curl 0.0.0.0:8080/update?cidr={例子：192.168.1.1/24}
+   curl 0.0.0.0:8080/update?cidr={例子：192.168.1.1/24},ban_type={0/1},ban_time={例子: 100}
    ```
+
+   `ban_type`：0 为暂时，1 为永久
+
+   `ban_time(s)`：ban 的时长，s 为单位
 
 2. 从 Ban 列表中移除 IPV4/IPV6 地址
 
