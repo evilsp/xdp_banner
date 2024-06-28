@@ -112,13 +112,13 @@ def get_system_boot_time():
     raise RuntimeError('Failed to get system boot time.')
 
 def convert_ktime_to_time(ktime_ns):
-    # 获取系统启动时间
+    # Get boot time(s)
     boot_time = get_system_boot_time()
 
-    # 将纳秒转换为毫秒(Grafana Time 以毫秒为单位)
+    # Change ns to s in order to calculate
     ktime_sec = ktime_ns / 1e9
 
-    # 计算当前时间戳
+    # Change ns to ms for grafana timestamp use ms
     return (boot_time + ktime_sec)*1000
 
 
