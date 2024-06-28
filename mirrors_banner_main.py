@@ -48,16 +48,20 @@ logger.addHandler(info_handler)
 logger.addHandler(error_handler)
 
 # XDP_VAR_INIT
-v4_banned_list_location = '/etc/nginx/banned_ipv4'
-v4_banned_list_persistence = '/etc/nginx/banned_ipv4_persistence'
-v6_banned_list_location = '/etc/nginx/banned_ipv6'
-v6_banned_list_persistence = '/etc/nginx/banned_ipv6_persistence'
+v4_banned_list_location = '/etc/xdp_rules/banned_ipv4'
+v4_banned_list_persistence = '/etc/xdp_rules/banned_ipv4_persistence'
+v6_banned_list_location = '/etc/xdp_rules/banned_ipv6'
+v6_banned_list_persistence = '/etc/xdp_rules/banned_ipv6_persistence'
 prog_location = './mirrors_banner.c'
 prog_func_name = 'mirrors_banner'
 
 # XDP_INIT
-xdp_map = BannedIpXdpMap(v4_banned_list_location, v6_banned_list_location, v4_banned_list_persistence, v6_banned_list_persistence)
+xdp_map = BannedIpXdpMap(v4_banned_list_location, v6_banned_list_location,
+                         v4_banned_list_persistence, v6_banned_list_persistence,
+                         sync_time=60, auto_remove_enabled= False)
 xdp_prog = BannedIpXdpProg(prog_location, prog_func_name)
+
+
 
 # DEV_INIT_LIST
 init_dict = {
@@ -187,12 +191,12 @@ def status():
 
 
 @app.get("/update")
-def update(cidr: str, ban_type: int=1, ban_time: int=0):
+def update(cidr: str, ban_type: int=0, ban_time: int=0):
     err = xdp_map.add_ip_to_ban_list_with_cidr(cidr=cidr, is_cidr_permanently_banned=ban_type, ban_time=ban_time)
     if err == 0:
         return {"message":f"Successfully added {cidr} to banned list"}
     if err == 1:
-        return {"message": f"{cidr} exists, skip"}
+        return {"message": f"{cidr} have been updated"}
     if err == -1:
         return {"message": f"Failed to add {cidr} to banned list"}
 

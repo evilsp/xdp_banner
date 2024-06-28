@@ -1,1 +1,2 @@
-# {cidr_block} {init_time_stamp} {end_time_stamp} {is_permanently_banned} {available or not}
+{cidr_block} {init_time_stamp} {end_time_stamp} {is_permanently_banned} {available or not}
+222.186.59.38/32 10 10 1 1

@@ -148,7 +148,7 @@ class BanList:
         Reload banlist fully
         """
         # Set False to override persistence_config
-        self.load_banlist(self.persistence_path, clear_enable=False)
+        self.load_banlist(self.persistence_path, clear_enable=True)
         self.load_banlist(self.filepath, clear_enable=False)
 
     def load_banlist(self, file_path, clear_enable:bool = True):
@@ -183,7 +183,8 @@ class BanList:
                         logging.error(f'{line} 不满足规则，本步解析跳过')
                         continue
                     # Save cidr to cidr_list
-                    self.cidr_list.add(elements[0])
+                    if elements[0] not in self.cidr_list:
+                        self.cidr_list.add(elements[0])
                     # Save cidr to element_map
                     info = BannedCidrInfo()
                     info.init_time = int(elements[1])
@@ -197,63 +198,67 @@ class BanList:
                     logging.info(f'{line} 满足规则，已成功被解析')
                     logging.debug(f'{line} 满足规则，已成功被解析。init_time: {info.init_time}, timeout_time: {info.timeout_time}, type: {info.type}, status: {info.status}')
 
-    def add_cidr(self, cidr: str, is_cidr_permanently_banned: int, ban_time: int = 0):
+    def update_cidr(self, cidr: str, is_cidr_permanently_banned: int, ban_time: int = 0):
         """
-        This function add cidr to cidr_list and element_list
+        This function update cidr to cidr_list and element_list
 
         Args:
-            cidr (str): The cidr which will be added.
+            cidr (str): The cidr which will be updated.
             is_cidr_permanently_banned (int): Just as the name, 0 is temporarily, 1 is permanently
             ban_time (int, optional): If choose temporarily banned, set this to the time(s) you prefer
 
         Returns:
-            int: 1 if cidr exists, 0 if success, -1 if error
+            int: 1 if cidr exists, 0 if new, -1 if error
         """
-
+        return_code = 1
         cidr_struct = parse_cidr(cidr)
         # Check if cidr is valid and in cidr_list, and other params is valid
-        if cidr in self.cidr_list:
-            logging.info(f"CIDR: {cidr} have have been skipped for it has been existed")
-            return 1
         if cidr is not None or \
                 is_cidr_permanently_banned not in [0, 1] or \
                     isinstance(ban_time, int) is False:
             # Trans to ns
-            ban_time = ban_time * 10^9
             time_now = time.time_ns()
+            ban_time = time_now + ban_time * (10**9)
+            status =  int(time_now < ban_time)
             info = BannedCidrInfo()
-            element = f'{cidr} {time_now} {time_now + ban_time} {is_cidr_permanently_banned} 1'
+            element = f'{cidr} {time_now} {ban_time} {is_cidr_permanently_banned} {status}'
             info.init_time = time_now
-            info.timeout_time = time_now + ban_time
+            info.timeout_time = ban_time
             info.type = is_cidr_permanently_banned
-            info.status = 1
+            info.status = status
+            # Check if should new a cidr block
+            if cidr not in self.cidr_list:
+                self.cidr_list.add(cidr)
+                return_code = 0
             self.element_map[cidr] = info
             self.cidr_map[cidr] = cidr_struct
-            self.cidr_list.add(cidr)
-            self._write_element_to_file(element)
-            return 0
+            self.write_element_to_file(element)
+            return return_code
         logging.error(f'Add cidr error：Params [{cidr}, {is_cidr_permanently_banned}, {ban_time}] is not valid')
         return -1
 
     def check_cidr(self,cidr):
         """
-            检查 cidr 是否存在
+            Check if cidr exists
         """
         if cidr in self.cidr_list:
             return 0
         return 1
 
-    def remove_cidr(self, cidr:str):
+    def remove_cidr(self, cidr:str, rewrite_enable:bool = True):
         """从 cidr_list 中移除 IP"""
+        if not isinstance(rewrite_enable,bool):
+            raise ValueError("rewrite_enable should be bool！")
         if cidr in self.cidr_list:
             self.cidr_list.remove(cidr)
             self.element_map.pop(cidr)
             self.cidr_map.pop(cidr)
-            self._rewrite_banlist()
+            if rewrite_enable:
+                self.rewrite_banlist()
             return 0
         return 1
 
-    def _write_element_to_file(self, element):
+    def write_element_to_file(self, element):
         """Append new element to persistent file"""
         try:
             with open(self.persistence_path, 'a') as f:
@@ -267,13 +272,13 @@ class BanList:
         except ValueError as e:
             logging.error(f"ValueError occurred while appending new element to the banlist: {e}")
 
-    def _rewrite_banlist(self):
+    def rewrite_banlist(self):
         """Safely Rewrite persistent file"""
         try:
             with open(f"{self.persistence_path}.tmp", 'w') as f:
                 fcntl.flock(f, fcntl.LOCK_EX)
                 for cidr, cidr_info in self.element_map.items():
-                    element = f'{cidr} {cidr_info.init_time} {cidr_info.timeout_time} {cidr_info.type} {cidr_info.status}'
+                    element = f'{cidr} {cidr_info.init_time} {cidr_info.timeout_time} {int(cidr_info.type)} {int(cidr_info.status)}'
                     # Ensure the element is a string before writing
                     if not isinstance(element, str):
                         raise ValueError(f"Invalid element {element}, expected a string.")

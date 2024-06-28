@@ -7,10 +7,11 @@
 **该程序目前提供了以下几个功能**：
 
 1. 支持通过文件配置 IPv4 / IPv6 CIDR 块黑名单（按照 banned_ipv4 中给出的注释配置即可）
-2. 支持通过接口动态地添加/移除 xdp_banner 到网卡设备上
-3. 支持通过接口动态地添加/移除 IP 到黑名单中，同时会更改黑名单源文件以持久化变更
-4. 提供了基本的 Prometheus 指标接口，可以用于获取指标
-5. IP 被 Ban 时，如果其持有 TCP 连接，那么自动 RST
+2. 支持临时黑名单，以根据需求灵活地封禁 IP（黑名单默认每 30s 同步一次，可根据需求更改 | 最低 30s）
+3. 支持通过接口动态地添加/移除 xdp_banner 到网卡设备上
+4. 支持通过接口动态地添加/移除 IP 到黑名单中，同时会更改黑名单源文件以持久化变更
+5. 提供了基本的 Prometheus 指标接口，可以用于获取指标
+6. IP 被 Ban 时，如果其持有 TCP 连接，那么自动 RST
 
 **该程序将会提供以下几个功能：**
 
@@ -19,10 +20,6 @@
    > 注：目前变更配置需通过更改 mirrors_banner_main.py 进行，需求相关项均已批注。
 
 2. 支持在添加 CIDR 块时判断是否有覆盖现象，如果已经存在范围更大的 CIDR 块，那么放弃变更
-
-3. 支持临时黑名单，以根据需求灵活地封禁 IP，而非每次都永久封禁
-
-   进度：底层数据结构已经实现该功能，等待上层实现
 
 4. 支持流量控制，以根据需求限制目标 IP 的流量
 
@@ -61,7 +58,7 @@
 1. 添加 IPV4/IPV6 地址到 Ban 列表中
 
    ```bash
-   curl 0.0.0.0:8080/update?cidr={例子：192.168.1.1/24},ban_type={0/1},ban_time={例子: 100}
+   curl "0.0.0.0:8080/update?cidr={例子：192.168.1.1/24}&ban_type={0/1}&ban_time={例子: 100}"
    ```
 
    `ban_type`：0 为暂时，1 为永久
@@ -71,37 +68,37 @@
 2. 从 Ban 列表中移除 IPV4/IPV6 地址
 
    ```bash
-   curl 0.0.0.0:8080/remove?cidr={例子：192.168.1.1/24}
+   curl "0.0.0.0:8080/remove?cidr={例子：192.168.1.1/24}"
    ```
 
 3. 查看 xdp_banner 在设备上的挂载情况（要求主机上安装了 `iproute2` 工具包，原理为调用 `ip link show`）
 
    ```bash
-   curl 0.0.0.0:8080/status
+   curl "0.0.0.0:8080/status"
    ```
 
 4. 重新装载源文件中的 ipv6 和 ipv4 地址到 ban 列表
 
    ```bash
-   curl 0.0.0.0:8080/reload
+   curl "0.0.0.0:8080/reload"
    ```
 
 5. 将 xdp_banner 从某个网络设备上移除
 
    ```bash
-   curl 0.0.0.0:8080/detach?device={net_device_name}&attach_type={xdp 挂载位置（1 为驱动，0 为 skb 组织之后）}
+   curl "0.0.0.0:8080/detach?device={net_device_name}&attach_type={xdp 挂载位置（1 为驱动，0 为 skb 组织之后）}"
    ```
 
 6. 将 xdp_banner 挂载到某个网络设备上
 
    ```bash
-   curl 0.0.0.0:8080/attach?device={net_device_name}&attach_type={xdp 挂载位置（1 为驱动，0 为 skb 组织之后）}
+   curl "0.0.0.0:8080/attach?device={net_device_name}&attach_type={xdp 挂载位置（1 为驱动，0 为 skb 组织之后）}"
    ```
 
 7. Prometheus 指标接口
 
    ```bash
-   curl 0.0.0.0:8080/metrics
+   curl "0.0.0.0:8080/metrics"
    ```
 
    
