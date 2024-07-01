@@ -219,7 +219,7 @@ class BanList:
             # Trans to ns
             time_now = time.time_ns()
             ban_time = time_now + ban_time * (10**9)
-            status =  int(time_now < ban_time)
+            status =  int(time_now < ban_time) if is_cidr_permanently_banned == 0 else 1
             info = BannedCidrInfo()
             element = f'{cidr} {time_now} {ban_time} {is_cidr_permanently_banned} {status}'
             info.init_time = time_now
