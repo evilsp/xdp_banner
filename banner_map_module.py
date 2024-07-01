@@ -162,10 +162,13 @@ class BannedIpXdpMap(object):
             Walk through the banned_ips and Change their Status
         '''
         sync_time = time.time_ns()
+        if_rewrite = 0
         for cidr, cidr_info in ban_list.element_map.items():
             if cidr_info.status == 1 and cidr_info.type == 0 and (cidr_info.timeout_time < sync_time):
+                if_rewrite = 1
                 if self.auto_remove_enabled:
                     ban_list.remove_cidr(cidr, rewrite_enable=False)
                 cidr_info.status = 0
-        ban_list.rewrite_banlist()
+        if if_rewrite == 1:
+            ban_list.rewrite_banlist()
         ban_list.load_banlist(ban_list.persistence_path, clear_enable=True)
